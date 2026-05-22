@@ -11,6 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -70,6 +76,46 @@ class UserServiceIntegrationTest {
                 () -> assertThat(saved.getName()).isEqualTo("홍길동"),
                 () -> assertThat(saved.getEmail()).isEqualTo("user@example.com")
             );
+        }
+
+        @DisplayName("동일 loginId로 동시에 가입 요청 시, 한 건만 성공하고 나머지는 CONFLICT 예외가 발생한다.")
+        @Test
+        void onlyOneSucceeds_whenSameLoginIdSubmittedConcurrently() throws Exception {
+            // arrange
+            int threadCount = 2;
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            CountDownLatch latch = new CountDownLatch(1);
+            AtomicInteger successCount = new AtomicInteger(0);
+            AtomicInteger conflictCount = new AtomicInteger(0);
+
+            // act
+            List<Future<?>> futures = List.of(
+                executor.submit(() -> {
+                    try {
+                        latch.await();
+                        userService.signUp(new UserModel("user01", "Password1!", "홍길동", LocalDate.of(1990, 1, 1), "user@example.com"));
+                        successCount.incrementAndGet();
+                    } catch (CoreException e) {
+                        if (e.getErrorType() == ErrorType.CONFLICT) conflictCount.incrementAndGet();
+                    } catch (Exception ignored) {}
+                }),
+                executor.submit(() -> {
+                    try {
+                        latch.await();
+                        userService.signUp(new UserModel("user01", "Password1!", "홍길동", LocalDate.of(1990, 1, 1), "user@example.com"));
+                        successCount.incrementAndGet();
+                    } catch (CoreException e) {
+                        if (e.getErrorType() == ErrorType.CONFLICT) conflictCount.incrementAndGet();
+                    } catch (Exception ignored) {}
+                })
+            );
+            latch.countDown();
+            for (Future<?> f : futures) f.get();
+            executor.shutdown();
+
+            // assert
+            assertThat(successCount.get()).isEqualTo(1);
+            assertThat(conflictCount.get()).isEqualTo(1);
         }
 
         @DisplayName("이미 존재하는 loginId로 가입하면, CONFLICT 예외가 발생한다.")

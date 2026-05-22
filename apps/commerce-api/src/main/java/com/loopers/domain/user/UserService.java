@@ -3,6 +3,7 @@ package com.loopers.domain.user;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,11 +17,12 @@ public class UserService {
 
     @Transactional
     public UserModel signUp(UserModel user) {
-        if (userRepository.findByLoginId(user.getLoginId()).isPresent()) {
+        user.encodePassword(passwordEncoder);
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
             throw new CoreException(ErrorType.CONFLICT, "[loginId = " + user.getLoginId() + "] 이미 존재하는 아이디입니다.");
         }
-        user.encodePassword(passwordEncoder);
-        return userRepository.save(user);
     }
 
     @Transactional(readOnly = true)

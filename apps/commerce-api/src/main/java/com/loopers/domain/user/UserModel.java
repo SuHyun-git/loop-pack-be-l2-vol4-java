@@ -3,6 +3,7 @@ package com.loopers.domain.user;
 import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -19,6 +20,7 @@ public class UserModel extends BaseEntity {
     private static final DateTimeFormatter BIRTH_DATE_FORMATTER_6 = DateTimeFormatter.ofPattern("yyMMdd");
     private static final DateTimeFormatter BIRTH_DATE_FORMATTER_4 = DateTimeFormatter.ofPattern("MMdd");
 
+    @Column(unique = true)
     private String loginId;
     private String password;
     private String name;
