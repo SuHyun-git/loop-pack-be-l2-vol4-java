@@ -5,13 +5,16 @@ import com.loopers.domain.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+
 @RequiredArgsConstructor
 @Component
 public class UserFacade {
 
     private final UserService userService;
 
-    public UserInfo signUp(UserModel user) {
+    public UserInfo signUp(String loginId, String password, String name, LocalDate birthDate, String email) {
+        UserModel user = new UserModel(loginId, password, name, birthDate, email);
         UserModel saved = userService.signUp(user);
         return UserInfo.from(saved);
     }

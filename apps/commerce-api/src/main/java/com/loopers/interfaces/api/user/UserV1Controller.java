@@ -2,7 +2,6 @@ package com.loopers.interfaces.api.user;
 
 import com.loopers.application.user.UserFacade;
 import com.loopers.application.user.UserInfo;
-import com.loopers.domain.user.UserModel;
 import com.loopers.interfaces.api.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +18,13 @@ public class UserV1Controller {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<UserV1Dto.SignUpResponse> signUp(@Valid @RequestBody UserV1Dto.SignUpRequest request) {
-        UserModel user = new UserModel(
+        UserInfo info = userFacade.signUp(
             request.loginId(),
             request.password(),
             request.name(),
             request.birthDate(),
             request.email()
         );
-        UserInfo info = userFacade.signUp(user);
         return ApiResponse.success(UserV1Dto.SignUpResponse.from(info));
     }
 
