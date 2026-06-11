@@ -44,6 +44,20 @@ classDiagram
         ADMIN
     }
 
+    class CouponType {
+        <<enumeration>>
+        FIXED
+        RATE
+    }
+
+    class CouponStatus {
+        <<enumeration>>
+        AVAILABLE
+        USED
+        EXPIRED
+        BLOCKED
+    }
+
     %% ────────── Entities ──────────
     class Member {
         +loginId: String
@@ -104,6 +118,35 @@ classDiagram
         +quantity: int
     }
 
+    class CouponTemplateModel {
+        +name: String
+        +type: CouponType
+        +value: Long
+        +minOrderAmount: Long
+        +expiredAt: LocalDateTime
+        +isActive: boolean
+        +update(name, isActive) void
+        +isExpired() boolean
+        +canIssue() boolean
+    }
+
+    class UserCouponModel {
+        +memberId: Long
+        +templateId: Long
+        +usedAt: LocalDateTime
+        +isBlocked: boolean
+        +version: int
+        +use() void
+        +block() void
+        +getStatus(expiredAt) CouponStatus
+    }
+
+    class CouponDomainService {
+        <<service>>
+        +calculateDiscount(template, orderAmount) long
+        +validateMinOrderAmount(template, orderAmount) void
+    }
+
     %% ────────── 상속 ──────────
     BaseEntity <|-- SoftDeletableEntity
     SoftDeletableEntity <|-- Member
@@ -113,10 +156,14 @@ classDiagram
     SoftDeletableEntity <|-- Order
     BaseEntity <|-- Like
     BaseEntity <|-- OrderItem
+    BaseEntity <|-- CouponTemplateModel
+    BaseEntity <|-- UserCouponModel
 
     %% ────────── Enum 사용 ──────────
     Member "1" --> "1" Role
     Order "1" --> "1" OrderStatus
+    CouponTemplateModel "1" --> "1" CouponType
+    UserCouponModel "1" --> "1" CouponStatus
 
     %% ────────── 합성 Composition ──────────
     Order "1" *-- "1..*" OrderItem : 포함
@@ -128,6 +175,8 @@ classDiagram
     Like "0..*" --> "1" Member : 좋아요한 회원
     Like "0..*" --> "1" Product : 좋아요한 상품
     OrderItem "0..*" --> "1" Product : 스냅샷 참조
+    UserCouponModel "0..*" --> "1" Member : 소유자
+    UserCouponModel "0..*" --> "1" CouponTemplateModel : 발급 기반
 ```
 
 ### 관계 종류 설명

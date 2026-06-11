@@ -65,11 +65,37 @@ erDiagram
     orders {
         bigint id PK
         bigint member_id "NOT NULL, 논리적 FK"
+        bigint coupon_id "논리적 FK, nullable"
         varchar(10) status "PENDING|CONFIRMED|CANCELLED, NOT NULL"
+        bigint original_amount "NOT NULL"
+        bigint discount_amount "NOT NULL, DEFAULT 0"
         bigint total_price "NOT NULL"
         datetime created_at "NOT NULL"
         datetime updated_at "NOT NULL"
         datetime deleted_at
+    }
+
+    coupon_templates {
+        bigint id PK
+        varchar(100) name "NOT NULL"
+        varchar(10) type "FIXED|RATE, NOT NULL, 불변"
+        bigint value "NOT NULL, 불변"
+        bigint min_order_amount "nullable, 불변"
+        datetime expired_at "NOT NULL, 불변"
+        boolean is_active "NOT NULL, DEFAULT true"
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
+    }
+
+    user_coupons {
+        bigint id PK
+        bigint member_id "NOT NULL, 논리적 FK, UK(member_id, template_id)"
+        bigint template_id "NOT NULL, 논리적 FK, UK(member_id, template_id)"
+        datetime used_at "nullable"
+        boolean is_blocked "NOT NULL, DEFAULT false"
+        int version "낙관적 락"
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     order_items {
@@ -90,6 +116,9 @@ erDiagram
     products ||--o{ likes : "product_id"
     orders ||--|{ order_items : "order_id"
     products ||--o{ order_items : "product_id"
+    members ||--o{ user_coupons : "member_id"
+    coupon_templates ||--o{ user_coupons : "template_id"
+    orders }o--o| user_coupons : "coupon_id"
 ```
 
 ---
