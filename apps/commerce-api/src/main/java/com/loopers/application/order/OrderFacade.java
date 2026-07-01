@@ -51,8 +51,8 @@ public class OrderFacade {
 
         long discountAmount = couponDomainService.calculateDiscount(template, originalAmount);
         var order = orderService.create(memberId, items, couponId, originalAmount, discountAmount);
-        eventPublisher.publishEvent(OrderCreatedEvent.from(order));
         var orderItems = orderService.getItemsByOrderId(order.getId());
+        eventPublisher.publishEvent(OrderCreatedEvent.from(order, orderItems));
         return OrderInfo.of(order, orderItems);
     }
 
