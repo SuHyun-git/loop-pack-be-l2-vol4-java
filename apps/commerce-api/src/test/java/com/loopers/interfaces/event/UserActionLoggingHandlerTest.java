@@ -5,6 +5,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.loopers.interfaces.event.order.OrderCreatedEvent;
 import com.loopers.interfaces.event.product.ProductViewedEvent;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +62,7 @@ class UserActionLoggingHandlerTest {
         @Test
         void handle_logsOrderCreated() {
             // arrange
-            OrderCreatedEvent event = new OrderCreatedEvent(5L, 3L, 50000L);
+            OrderCreatedEvent event = new OrderCreatedEvent(5L, 3L, 50000L, List.of());
 
             // act
             AopTestUtils.<UserActionLoggingHandler>getTargetObject(userActionLoggingHandler).handle(event);
